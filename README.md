@@ -1,7 +1,7 @@
 # Terminal MCP Server
 
 
-> **Part of the [HeLa MCP Ecosystem](https://github.com/1999AZZAR/hela-mcp-ecosystem)** — This server is **HeLa Nucleus (`hela-nucleus`)** — the *Command Exec* component of the HeLa cellular architecture. See the [ecosystem docs](https://github.com/1999AZZAR/hela-mcp-ecosystem) for profiles, workflows, and multi-client setup.
+> **Part of the [HeLa MCP Ecosystem](https://github.com/Hela-Ecosystem/hela-mcp-ecosystem)** — This server is **HeLa Nucleus (`hela-nucleus`)** — the *Command Exec* component of the HeLa cellular architecture. See the [ecosystem docs](https://github.com/Hela-Ecosystem/hela-mcp-ecosystem) for profiles, workflows, and multi-client setup.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![npm version](https://badge.fury.io/js/terminal-mcp.svg)](https://badge.fury.io/js/terminal-mcp)
@@ -69,7 +69,7 @@ Terminal MCP Server is a robust Model Context Protocol (MCP) server designed for
 
 ![Blotcat turning a hand crank on a desktop press to compress a verbose terminal log into a high-density token cube](assets/terminal-illustrations/03-rtk-optimizer.jpg)
 
-Terminal MCP Server integrates with [rtk](https://github.com/1999AZZAR/rtk) to significantly reduce token consumption and improve context efficiency.
+Terminal MCP Server integrates with [rtk](https://github.com/Hela-Ecosystem/rtk) to significantly reduce token consumption and improve context efficiency.
 
 ### Command Rewriting
 The server automatically attempts to rewrite common commands into their `rtk` optimized equivalents (e.g., `ls` -> `rtk ls`).
@@ -350,7 +350,7 @@ Lists panes within a specific tmux window with detailed pane information.
 ### Manual Installation
 ```bash
 # Clone the repository
-git clone https://github.com/1999AZZAR/terminal-mcp.git
+git clone https://github.com/Hela-Ecosystem/terminal-mcp.git
 cd terminal-mcp
 
 # Install dependencies

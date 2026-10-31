@@ -34,12 +34,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/1999AZZAR/terminal-mcp-server.git"
+    "url": "git+https://github.com/Hela-Ecosystem/terminal-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/1999AZZAR/terminal-mcp-server/issues"
+    "url": "https://github.com/Hela-Ecosystem/terminal-mcp-server/issues"
   },
-  "homepage": "https://github.com/1999AZZAR/terminal-mcp-server#readme",
+  "homepage": "https://github.com/Hela-Ecosystem/terminal-mcp-server#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.0",
     "ssh2": "^1.16.0"

@@ -35,8 +35,8 @@ Thank you for your interest in contributing to the Terminal MCP Server! This doc
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Hela-Ecosystem/terminal-mcp-server.git
-   cd terminal-mcp-server
+   git clone https://github.com/Hela-Ecosystem/terminal-mcp.git
+   cd terminal-mcp
    ```
 
 2. **Install dependencies**:

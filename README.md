@@ -1,10 +1,13 @@
 # Terminal MCP Server
 
+<!-- hela:version:start -->
+**MCP server:** `hela-nucleus` · **Version:** `3.0.0` · **Canonical tools:** 7. [Current tool reference](docs/TOOLS.md).
+<!-- hela:version:end -->
+
 
 > **Part of the [HeLa MCP Ecosystem](https://github.com/Hela-Ecosystem/hela-mcp-ecosystem)** — This server is **HeLa Nucleus (`hela-nucleus`)** — the *Command Exec* component of the HeLa cellular architecture. See the [ecosystem docs](https://github.com/Hela-Ecosystem/hela-mcp-ecosystem) for profiles, workflows, and multi-client setup.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
-[![npm version](https://badge.fury.io/js/terminal-mcp.svg)](https://badge.fury.io/js/terminal-mcp)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 
 Terminal MCP Server is a robust Model Context Protocol (MCP) server designed for executing commands on local and remote hosts via SSH. It provides a simple yet powerful interface for AI models and other applications to execute system commands with enhanced session management, error handling, and reliability features.

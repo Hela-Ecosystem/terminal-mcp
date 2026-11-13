@@ -1,6 +1,6 @@
 {
   "name": "terminal-mcp-server",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A robust MCP server for executing commands locally and remotely via SSH with enhanced session management and error handling",
   "keywords": [
     "mcp",

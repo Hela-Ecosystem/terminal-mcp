@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2026-11-14
+
+- Automatically install a user-local, checksum-verified RTK OSS binary on first optimization request when RTK is missing.
+- Support managed RTK resolution on Linux, macOS, Windows, and Windows ARM64 through x64 emulation; set `RTK_AUTO_INSTALL=false` to retain raw-command fallback.
+- Add `RTK_INSTALL_DIR` and `RTK_EDITION` controls without requiring root privileges or a global package-manager change.
+
 ## [3.0.1] - 2026-11-13
 
 ### Changed

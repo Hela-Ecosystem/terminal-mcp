@@ -22,6 +22,7 @@ import {
 } from "./executor.js";
 import { log } from "./logger.js";
 import { textResult } from "./envelope.js";
+import { getRtkBinary } from "./rtk.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs";
@@ -30,32 +31,6 @@ import * as os from "os";
 
 const commandExecutor = new CommandExecutor();
 const execFileAsync = promisify(execFile);
-const rtkBinaries = [
-  process.env.RTK_BIN,
-  "rtk"
-].filter((v): v is string => Boolean(v));
-
-let cachedRtkBinary: string | null | undefined = undefined;
-
-async function getRtkBinary(): Promise<string | null> {
-  if (cachedRtkBinary !== undefined) {
-    return cachedRtkBinary;
-  }
-
-  for (const bin of rtkBinaries) {
-    try {
-      await execFileAsync(bin, ["--version"], { timeout: 1000 });
-      cachedRtkBinary = bin;
-      return bin;
-    } catch {
-      // not available
-    }
-  }
-
-  cachedRtkBinary = null;
-  return null;
-}
-
 async function rewriteWithRtk(command: string): Promise<string> {
   if (process.env.RTK_MCP_REWRITE === "false") {
     return command;

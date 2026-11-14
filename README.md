@@ -66,17 +66,17 @@ Terminal MCP Server is a robust Model Context Protocol (MCP) server designed for
 - **Stdio Connection**: Connect via standard input/output for direct integration
 - **Security Features**: Precise command validation (root protection without false positives), path segment traversal defense, output size limits, session limits, rate limiting
 - **File Transfers**: Upload and download files via SFTP, local file copy operations with safe double-dot filename support
-- **RTK Integration**: Intelligent command rewriting and output summarization to optimize token usage for AI contexts, with missing-binary resolution caching
+- **RTK Integration**: Intelligent command rewriting and output summarization to optimize token usage for AI contexts, with checksum-verified user-local bootstrap when RTK is missing
 
 ## RTK Integration
 
 ![Blotcat turning a hand crank on a desktop press to compress a verbose terminal log into a high-density token cube](assets/terminal-illustrations/03-rtk-optimizer.jpg)
 
-Terminal MCP Server integrates with [rtk](https://github.com/Hela-Ecosystem/rtk) to significantly reduce token consumption and improve context efficiency.
+Terminal MCP Server integrates with [rtk](https://github.com/rtk-ai/rtk) to significantly reduce token consumption and improve context efficiency.
 
 ### Command Rewriting
 The server automatically attempts to rewrite common commands into their `rtk` optimized equivalents (e.g., `ls` -> `rtk ls`).
-- **Local**: Rewriting is performed if `rtk` is found in your `PATH` or specified via `RTK_BIN`.
+- **Local**: Rewriting is performed if `rtk` is found in your `PATH` or specified via `RTK_BIN`. If it is missing, the server installs the pinned RTK OSS release into a user-local managed directory on the first optimization request, verifies its SHA-256 checksum, and falls back to the original command if installation is unavailable.
 - **Remote**: If `rtk` is installed on the remote host, commands are wrapped in a shell-level rewriter (`RTK_CMD=$(rtk rewrite "cmd" || echo "cmd"); eval "$RTK_CMD"`) to optimize remote output without extra roundtrips.
 
 ### Output Summarization
@@ -88,6 +88,9 @@ For extremely large outputs (exceeding 10,000 characters), the server automatica
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RTK_BIN` | (rtk in PATH) | Path to the `rtk` binary if not in system PATH |
+| `RTK_AUTO_INSTALL` | true | Set to `false` to disable managed RTK installation and use raw commands when RTK is missing |
+| `RTK_INSTALL_DIR` | user-local HeLa data directory | Directory for the managed RTK binary; no root privileges are required |
+| `RTK_EDITION` | `oss` | `oss` uses the Apache-2.0 edition; `full` selects RTK’s full edition |
 | `RTK_MCP_REWRITE` | true | Set to `false` to disable all `rtk` optimizations |
 
 ## Available Resources
@@ -931,6 +934,9 @@ All limits and timeouts are configurable via environment variables:
 | `MAX_FILE_TRANSFER_SIZE` | 104857600 | Maximum file size for transfers (100MB) |
 | `SSH_KEY_PATH` | Auto-discovered | Path to SSH private key (searches ~/.ssh/id_ed25519, id_rsa, id_ecdsa) |
 | `RTK_BIN` | (rtk in PATH) | Path to `rtk` binary |
+| `RTK_AUTO_INSTALL` | true | Automatically install the pinned user-local RTK binary when missing |
+| `RTK_INSTALL_DIR` | user-local HeLa data directory | Managed RTK installation directory |
+| `RTK_EDITION` | `oss` | RTK edition to bootstrap: `oss` or `full` |
 | `RTK_MCP_REWRITE` | true | Enable/disable `rtk` token optimizations |
 | `DEBUG` | false | Enable debug logging |
 | `HELA_NUCLEUS_ALLOW_REMOTE` | *unset = off* | Set to `true` to allow the `host` argument (remote SSH execution). Off = any call with `host` is denied; local execution unchanged. |

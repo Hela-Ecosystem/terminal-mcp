@@ -1,7 +1,7 @@
 # Terminal MCP Server
 
 <!-- hela:version:start -->
-**MCP server:** `hela-nucleus` · **Version:** `3.0.3` · **Canonical tools:** 7. [Current tool reference](docs/TOOLS.md).
+**MCP server:** `hela-nucleus` · **Version:** `3.0.4` · **Canonical tools:** 7. [Current tool reference](docs/TOOLS.md).
 <!-- hela:version:end -->
 
 

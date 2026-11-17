@@ -23,6 +23,7 @@ import {
 import { log } from "./logger.js";
 import { textResult } from "./envelope.js";
 import { getRtkBinary } from "./rtk.js";
+import { VERSION } from "./version.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs";
@@ -96,7 +97,7 @@ function createServer() {
   const server = new Server(
     {
       name: "terminal-mcp-server",
-      version: "3.0.3",
+      version: VERSION,
     },
     {
       capabilities: {

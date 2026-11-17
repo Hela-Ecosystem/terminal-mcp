@@ -1,3 +1,8 @@
+## [3.0.4] - 2026-11-18
+
+### Fixed
+- Keep the advertised MCP server version in sync with package metadata through a single-source version guard.
+
 ## [3.0.3] - 2026-11-18
 
 ### Fixed

@@ -55,9 +55,24 @@ export class RateLimitError extends Error {
   }
 }
 
+/**
+ * True when `target` is `root` itself or one of its descendants.
+ * Compares whole path segments, so `/srv/application` is not inside `/srv/app`.
+ */
+export function isPathWithin(target: string, root: string): boolean {
+  const normalize = (value: string): string => {
+    const resolved = path.resolve(value);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const targetPath = normalize(target);
+  const rootPath = normalize(root);
+  if (targetPath === rootPath) return true;
+  const boundary = rootPath.endsWith(path.sep) ? rootPath : rootPath + path.sep;
+  return targetPath.startsWith(boundary);
+}
+
 // Configuration interface
-export interface ExecutorConfig {
-  sessionTimeout: number;
+export interface ExecutorConfig {  sessionTimeout: number;
   maxRetries: number;
   connectionTimeout: number;
   maxConcurrentSessions: number;
@@ -81,7 +96,7 @@ function getConfig(): ExecutorConfig {
     enableCommandValidation: process.env.ENABLE_COMMAND_VALIDATION !== 'false',
     commandBlacklist: (process.env.COMMAND_BLACKLIST || '').split(',').filter(Boolean),
     allowedWorkingDirectories: process.env.ALLOWED_WORKING_DIRECTORIES 
-      ? process.env.ALLOWED_WORKING_DIRECTORIES.split(',').filter(Boolean)
+      ? process.env.ALLOWED_WORKING_DIRECTORIES.split(',').map(dir => dir.trim()).filter(Boolean)
       : null,
     rateLimitPerMinute: parseInt(process.env.RATE_LIMIT_PER_MINUTE || '60', 10),
     rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false',
@@ -193,8 +208,8 @@ export class CommandExecutor {
 
     // Check against allowed directories if configured
     if (this.config.allowedWorkingDirectories !== null) {
-      const isAllowed = this.config.allowedWorkingDirectories.some(allowed => 
-        directory.startsWith(allowed)
+      const isAllowed = this.config.allowedWorkingDirectories.some(allowed =>
+        isPathWithin(directory, allowed)
       );
       if (!isAllowed) {
         throw new SecurityError(`Working directory '${directory}' is not in the allowed directories list`);

@@ -6,7 +6,8 @@ import * as os from 'node:os';
 import { 
   CommandExecutor, 
   SecurityError, 
-  ValidationError 
+  ValidationError,
+  isPathWithin
 } from '../build/executor.js';
 
 test('CommandExecutor: local echo command execution', async () => {
@@ -152,4 +153,36 @@ test('CommandExecutor: listSessions and closeSession lifecycle management', asyn
   assert.equal(list.summary.totalSessions, 0);
 
   await executor.disconnect();
+});
+
+test('security: path boundary comparison rejects sibling prefixes', () => {
+  assert.equal(isPathWithin('/srv/app', '/srv/app'), true, 'exact match');
+  assert.equal(isPathWithin('/srv/app', '/srv/app/'), true, 'trailing separator on root');
+  assert.equal(isPathWithin('/srv/app/sub', '/srv/app'), true, 'descendant');
+  assert.equal(isPathWithin('/srv/application', '/srv/app'), false, 'sibling sharing a prefix');
+  assert.equal(isPathWithin('/srv/app-other', '/srv/app'), false, 'sibling with dash suffix');
+  assert.equal(isPathWithin('/srv/app/../application', '/srv/app'), false, 'dot-dot escape');
+  assert.equal(isPathWithin('/etc', '/srv/app'), false, 'unrelated path');
+});
+
+test('security: validateWorkingDirectory blocks prefix siblings on real paths', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hela-allowed-'));
+  const sibling = `${root}-sibling`;
+  fs.mkdirSync(sibling);
+  fs.mkdirSync(path.join(root, 'child'));
+  const executor = new CommandExecutor({ allowedWorkingDirectories: [root] });
+  await assert.doesNotReject(() => executor.validateWorkingDirectory(root));
+  await assert.doesNotReject(() => executor.validateWorkingDirectory(path.join(root, 'child')));
+  await assert.rejects(
+    () => executor.validateWorkingDirectory(sibling),
+    (error) => error instanceof SecurityError,
+    'a sibling directory that shares the string prefix must be refused'
+  );
+  await assert.rejects(
+    () => executor.validateWorkingDirectory(path.join(root, '..', path.basename(sibling))),
+    (error) => error instanceof SecurityError,
+    'traversal out of the allowed root must be refused'
+  );
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(sibling, { recursive: true, force: true });
 });

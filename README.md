@@ -1,7 +1,7 @@
 # Terminal MCP Server
 
 <!-- hela:version:start -->
-**MCP server:** `hela-nucleus` · **Version:** `3.0.1` · **Canonical tools:** 7. [Current tool reference](docs/TOOLS.md).
+**MCP server:** `hela-nucleus` · **Version:** `3.0.3` · **Canonical tools:** 7. [Current tool reference](docs/TOOLS.md).
 <!-- hela:version:end -->
 
 
@@ -460,7 +460,7 @@ The execute_command tool is the core functionality provided by Terminal MCP Serv
 | session | string | No | Session name, defaults to "default". The same session name will reuse the same terminal environment for 20 minutes |
 | env | object | No | Environment variables, defaults to an empty object |
 | workingDirectory | string | No | Working directory for command execution (optional) |
-| timeout | number | No | Command timeout in milliseconds (default: 30000, range: 1000-300000) |
+| timeout | number | No | Command timeout in milliseconds (default: 30000, range: 1000-600000) |
 
 ### Examples
 

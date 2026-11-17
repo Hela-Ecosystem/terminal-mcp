@@ -1,3 +1,9 @@
+## [3.0.3] - 2026-11-18
+
+### Fixed
+- Working-directory allowlist compared paths with a raw string prefix, so an allowed root such as `/srv/app` also authorised `/srv/application`. Comparisons now require a whole path segment (exact match or descendant), and traversal out of the root is refused. `ALLOWED_WORKING_DIRECTORIES` entries are trimmed.
+- README documented the command timeout range as 300000 ms while the schema and validation allow 600000 ms; the documentation now matches the enforced limit.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

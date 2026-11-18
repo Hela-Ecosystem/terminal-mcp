@@ -3,6 +3,11 @@
 ### Fixed
 - Keep the advertised MCP server version in sync with package metadata through a single-source version guard.
 
+## [3.0.5] - 2026-11-19
+
+### Changed
+- npm audit fix clears eight advisories; no API change.
+
 ## [3.0.3] - 2026-11-18
 
 ### Fixed

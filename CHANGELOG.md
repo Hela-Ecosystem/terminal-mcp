@@ -1,3 +1,8 @@
+## [3.0.6] - 2026-11-19
+
+### Fixed
+- Inline `cd` commands containing shell operators now run through the shell instead of treating the entire command as a working-directory path. Standalone `cd` uses its first path argument.
+
 ## [3.0.4] - 2026-11-18
 
 ### Fixed

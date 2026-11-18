@@ -982,8 +982,10 @@ export class CommandExecutor {
     
     this.resetTimeout(sessionKey);
     
-    // Check if command is trying to change directory (cd)
-    const cdMatch = command.match(/^\s*cd(?:\s+(.+))?\s*$/);
+    // Intercept only simple cd commands. Shell chains must be executed by the shell.
+    const cdMatch = /[;&|]/.test(command)
+      ? null
+      : command.match(/^\s*cd(?:\s+((?:(?:-[A-Za-z]+)\s+)*(?:"[^"]*"|'[^']*'|\S+)))?(?:\s+.*)?\s*$/);
     if (cdMatch) {
       let targetDir = cdMatch[1] ? cdMatch[1].trim() : '';
       targetDir = this.removeMatchingQuotes(targetDir);

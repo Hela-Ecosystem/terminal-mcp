@@ -58,6 +58,47 @@ test('CommandExecutor: standalone cd and pwd session persistence', async () => {
   await executor.disconnect();
 });
 
+test('CommandExecutor: inline cd chains execute in the shell', async () => {
+  const executor = new CommandExecutor();
+  const res = await executor.executeCommand('cd /tmp && echo marker-ok');
+  assert.equal(res.exitCode, 0);
+  assert.match(res.stdout, /marker-ok/);
+  assert.notEqual(res.workingDirectory, '/tmp');
+  await executor.disconnect();
+});
+
+test('CommandExecutor: cd uses its path argument before trailing options', async () => {
+  const executor = new CommandExecutor();
+  const res = await executor.executeCommand('cd /tmp -P');
+  assert.equal(res.exitCode, 0);
+  assert.equal(res.workingDirectory, '/tmp');
+  await executor.disconnect();
+});
+
+test('CommandExecutor: plain commands are not interpreted as directory changes', async () => {
+  const executor = new CommandExecutor();
+  const res = await executor.executeCommand('echo plain-command-ok');
+  assert.equal(res.exitCode, 0);
+  assert.match(res.stdout, /plain-command-ok/);
+  await executor.disconnect();
+});
+
+test('CommandExecutor: cd commands with semicolons execute in the shell', async () => {
+  const executor = new CommandExecutor();
+  const res = await executor.executeCommand('cd /tmp; echo semicolon-ok');
+  assert.equal(res.exitCode, 0);
+  assert.match(res.stdout, /semicolon-ok/);
+  assert.notEqual(res.workingDirectory, '/tmp');
+  await executor.disconnect();
+});
+
+test('CommandExecutor: cd commands with pipes execute in the shell', async () => {
+  const executor = new CommandExecutor();
+  const res = await executor.executeCommand('cd /tmp | cat');
+  assert.notEqual(res.workingDirectory, '/tmp');
+  await executor.disconnect();
+});
+
 test('CommandExecutor: validation errors on empty or invalid inputs', () => {
   const executor = new CommandExecutor();
   assert.throws(() => executor.validateCommand(''), ValidationError);
@@ -182,6 +223,11 @@ test('security: validateWorkingDirectory blocks prefix siblings on real paths', 
     () => executor.validateWorkingDirectory(path.join(root, '..', path.basename(sibling))),
     (error) => error instanceof SecurityError,
     'traversal out of the allowed root must be refused'
+  );
+  await assert.rejects(
+    () => executor.executeCommand('echo should-not-run', { workingDirectory: sibling }),
+    (error) => error instanceof SecurityError,
+    'an explicit workingDirectory must still pass the allowlist check'
   );
   fs.rmSync(root, { recursive: true, force: true });
   fs.rmSync(sibling, { recursive: true, force: true });

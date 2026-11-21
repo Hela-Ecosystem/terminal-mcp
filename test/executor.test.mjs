@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { spawn } from 'node:child_process';
 import { 
   CommandExecutor, 
   SecurityError, 
@@ -231,4 +232,38 @@ test('security: validateWorkingDirectory blocks prefix siblings on real paths', 
   );
   fs.rmSync(root, { recursive: true, force: true });
   fs.rmSync(sibling, { recursive: true, force: true });
+});
+
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+test('CommandExecutor: pkill -f does not kill the wrapper shell', async () => {
+  // terminal-mcp#3: with `sh -c "<command>"` the pattern sits in the wrapper's own
+  // argv, so pkill kills the shell and everything after it silently never runs.
+  const marker = `hela-pkill-marker-${process.pid}-${Date.now()}`;
+  const target = spawn('/bin/sh', ['-c', `sleep 30 # ${marker}`], { stdio: 'ignore' });
+  await wait(200);
+  const executor = new CommandExecutor();
+  try {
+    const res = await executor.executeCommand(`pkill -f '${marker}'; sleep 0.2; echo CLEANUP-RAN`);
+    assert.equal(res.exitCode, 0);
+    assert.match(res.stdout, /CLEANUP-RAN/, `cleanup never ran; stdout=${JSON.stringify(res.stdout)}`);
+  } finally {
+    try { target.kill('SIGKILL'); } catch { /* already gone */ }
+    await executor.disconnect();
+  }
+});
+
+test('CommandExecutor: pgrep -f does not match the wrapper shell', async () => {
+  const marker = `hela-pgrep-marker-${process.pid}-${Date.now()}`;
+  const target = spawn('/bin/sh', ['-c', `sleep 30 # ${marker}`], { stdio: 'ignore' });
+  await wait(200);
+  const executor = new CommandExecutor();
+  try {
+    const res = await executor.executeCommand(`pgrep -fa '${marker}' | grep -c .`);
+    const matches = Number(res.stdout.trim());
+    assert.equal(matches, 1, `expected only the target process, got ${matches}:\n${res.stdout}`);
+  } finally {
+    try { target.kill('SIGKILL'); } catch { /* already gone */ }
+    await executor.disconnect();
+  }
 });

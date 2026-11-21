@@ -2,7 +2,7 @@ import { Client } from 'ssh2';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { log } from './logger.js';
 
 // Custom Error Classes
@@ -1059,12 +1059,27 @@ export class CommandExecutor {
       const envVars = { ...process.env, ...sessionData.env };
       
       log.info(`Executing local command: ${command}`);
-      const childProcess = exec(command, { 
+      // Run from a temporary script rather than `sh -c "<command>"`. With -c the
+      // command text sits in the shell's own argv, so `pkill -f <pattern>` matches
+      // and kills the wrapper mid-compound (and `pgrep -f` reports a false
+      // positive). A script file keeps the pattern out of every process's command
+      // line while preserving shell semantics.
+      const scriptPath = path.join(
+        os.tmpdir(),
+        `hela-cmd-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}.sh`
+      );
+      fs.writeFileSync(scriptPath, command, { mode: 0o700 });
+      const cleanupScript = () => {
+        try { fs.unlinkSync(scriptPath); } catch { /* already removed */ }
+      };
+
+      const childProcess = execFile('/bin/sh', [scriptPath], { 
         env: envVars,
         cwd: sessionData.workingDirectory,
         timeout: timeout,
         maxBuffer: this.config.maxOutputSize
       }, (error, stdout, stderr) => {
+        cleanupScript();
         let exitCode = 0;
         if (error) {
            exitCode = typeof error.code === 'number' ? error.code : 1;
@@ -1089,6 +1104,7 @@ export class CommandExecutor {
       });
 
       childProcess.on('error', (error) => {
+        cleanupScript();
         reject(new CommandExecutionError(`Process error: ${error.message}`));
       });
     });

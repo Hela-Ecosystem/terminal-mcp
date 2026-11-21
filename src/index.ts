@@ -22,13 +22,11 @@ import {
 } from "./executor.js";
 import { log } from "./logger.js";
 import { textResult } from "./envelope.js";
-import { getRtkBinary } from "./rtk.js";
+import { getRtkBinary, summarizeWithRtk } from "./rtk.js";
 import { VERSION } from "./version.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
-import * as fs from "fs";
 import * as path from "path";
-import * as os from "os";
 
 const commandExecutor = new CommandExecutor();
 const execFileAsync = promisify(execFile);
@@ -49,46 +47,6 @@ async function rewriteWithRtk(command: string): Promise<string> {
     return stdout.trim() || command;
   } catch {
     return command;
-  }
-}
-
-async function summarizeWithRtk(text: string, type: 'stdout' | 'stderr'): Promise<{ content: string; summarized: boolean }> {
-  if (!text || text.length < 10000) {
-    return { content: text, summarized: false };
-  }
-
-  const bin = await getRtkBinary();
-  if (!bin) {
-    return { content: text, summarized: false };
-  }
-
-  const tmpFile = path.join(os.tmpdir(), `mcp-rtk-${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
-  
-  try {
-    fs.writeFileSync(tmpFile, text);
-    
-    // Use 'smart' for generic output or 'log' if it looks like logs
-    const subcommand = type === 'stderr' || text.includes('Error') || text.includes('warning') ? 'log' : 'smart';
-    
-    return new Promise((resolve) => {
-      execFile(bin, [subcommand, tmpFile], {
-        timeout: 3000,
-        env: process.env
-      }, (error, stdout) => {
-        // Cleanup temp file
-        try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
-
-        if (error || !stdout.trim()) {
-          resolve({ content: text, summarized: false });
-        } else {
-          const summary = `[RTK ${type.toUpperCase()} SUMMARY]\n${stdout.trim()}\n[Original length: ${text.length} chars]`;
-          resolve({ content: summary, summarized: true });
-        }
-      });
-    });
-  } catch (e) {
-    try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
-    return { content: text, summarized: false };
   }
 }
 

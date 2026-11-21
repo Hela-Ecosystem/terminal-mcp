@@ -4,6 +4,7 @@ import { promises as fs } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { promisify } from "node:util";
+import * as fsSync from "node:fs";
 import { log } from "./logger.js";
 
 const execFileAsync = promisify(execFile);
@@ -227,4 +228,99 @@ export async function getRtkBinary(): Promise<string | null> {
 export function resetRtkCacheForTests(): void {
   cachedRtkBinary = undefined;
   installPromise = null;
+}
+
+export type RtkSummary = { content: string; summarized: boolean };
+
+/** RTK is only worth invoking above this size; below it the loss can only hurt. */
+function summaryConfig(): { minChars: number; minRatio: number } {
+  const chars = Number.parseInt(process.env.RTK_SUMMARY_MIN_CHARS ?? "", 10);
+  const ratio = Number.parseFloat(process.env.RTK_SUMMARY_MIN_RATIO ?? "");
+  return {
+    minChars: Number.isFinite(chars) && chars > 0 ? chars : 10_000,
+    minRatio: Number.isFinite(ratio) && ratio > 0 && ratio <= 1 ? ratio : 0.05,
+  };
+}
+
+/**
+ * Match the log heuristic at line start only. The previous `text.includes("warning")`
+ * flipped any document that merely mentioned the word into log mode.
+ */
+function looksLikeLog(text: string): boolean {
+  return /(^|\n)[ \t]*(?:error|warning)\b/i.test(text);
+}
+
+function pruneSummaryOutputs(directory: string): void {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  let entries: string[];
+  try {
+    entries = fsSync.readdirSync(directory);
+  } catch {
+    return;
+  }
+  for (const name of entries) {
+    const file = path.join(directory, name);
+    try {
+      if (fsSync.statSync(file).mtimeMs < cutoff) fsSync.unlinkSync(file);
+    } catch { /* raced with another prune */ }
+  }
+}
+
+/**
+ * Compress large command output, but fail closed and keep the original reachable.
+ *
+ * Guards added for terminal-mcp#2: a summary below RTK_SUMMARY_MIN_RATIO of the
+ * original is rejected (the 22k-to-90 case was reported as success), and the
+ * source text is retained so a caller can read it when the summary is thin.
+ */
+export async function summarizeWithRtk(
+  text: string,
+  type: "stdout" | "stderr",
+): Promise<RtkSummary> {
+  const { minChars, minRatio } = summaryConfig();
+  if (!text || text.length < minChars) {
+    return { content: text, summarized: false };
+  }
+
+  const bin = await getRtkBinary();
+  if (!bin) {
+    return { content: text, summarized: false };
+  }
+
+  const directory = path.join(os.tmpdir(), "hela-rtk");
+  try {
+    fsSync.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  } catch { /* another process owns it */ }
+  pruneSummaryOutputs(directory);
+
+  const file = path.join(directory, `${Date.now()}-${Math.random().toString(36).slice(2)}.txt`);
+  try {
+    fsSync.writeFileSync(file, text, { mode: 0o600 });
+  } catch {
+    return { content: text, summarized: false };
+  }
+
+  const subcommand = type === "stderr" || looksLikeLog(text) ? "log" : "smart";
+
+  return new Promise((resolve) => {
+    execFile(bin, [subcommand, file], { timeout: 3000, env: process.env }, (error, stdout) => {
+      const summary = (stdout ?? "").trim();
+      if (error || !summary) {
+        resolve({ content: text, summarized: false });
+        return;
+      }
+      const ratio = summary.length / text.length;
+      if (ratio < minRatio) {
+        log.info(
+          `RTK summary rejected: ${(ratio * 100).toFixed(2)}% of ${text.length} chars (floor ${(minRatio * 100).toFixed(0)}%); returning full output`,
+        );
+        resolve({ content: text, summarized: false });
+        return;
+      }
+      resolve({
+        content: `[RTK ${type.toUpperCase()} SUMMARY]\n${summary}\n[Original length: ${text.length} chars; full output: ${file}]`,
+        summarized: true,
+      });
+    });
+  });
 }

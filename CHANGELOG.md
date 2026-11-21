@@ -1,3 +1,9 @@
+## [3.0.7] - 2026-11-22
+
+### Fixed
+- `execute_command` runs local commands from a temporary script instead of `sh -c "<command>"`. With `-c` the command text sat in the wrapper's own argv, so `pkill -f <pattern>` matched and killed the shell: the rest of a compound command silently never ran, and the call returned exit 1 with empty output — indistinguishable from "nothing matched". `pgrep -f` had the mirror problem, reporting the wrapper as a live match. terminal-mcp#3.
+- RTK summarisation fails closed and keeps the original reachable. A summary below 5% of the source (`RTK_SUMMARY_MIN_RATIO`) is rejected and the full output returned; the source is retained and named in the summary (`[Original length: N chars; full output: path]`), so a thin summary can be recovered instead of lost. The log heuristic now matches `Error`/`warning` at line start rather than anywhere in the text, so prose that mentions the word no longer switches modes. terminal-mcp#2.
+
 ## [3.0.6] - 2026-11-19
 
 ### Fixed

@@ -9,15 +9,15 @@
 ### Fixed
 - Inline `cd` commands containing shell operators now run through the shell instead of treating the entire command as a working-directory path. Standalone `cd` uses its first path argument.
 
-## [3.0.4] - 2026-11-18
-
-### Fixed
-- Keep the advertised MCP server version in sync with package metadata through a single-source version guard.
-
 ## [3.0.5] - 2026-11-19
 
 ### Changed
 - npm audit fix clears eight advisories; no API change.
+
+## [3.0.4] - 2026-11-18
+
+### Fixed
+- Keep the advertised MCP server version in sync with package metadata through a single-source version guard.
 
 ## [3.0.3] - 2026-11-18
 
